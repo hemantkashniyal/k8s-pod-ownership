@@ -1,0 +1,5 @@
+kopf
+redis
+kubernetes
+python-dotenv
+setuptools

@@ -1,0 +1,9 @@
+FROM python:3.10
+
+RUN mkdir /src
+ADD operator/owner-operator/requirements.txt /src
+RUN pip install -r /src/requirements.txt
+
+ADD service/owner-service /src
+
+CMD fastapi dev service/owner-service/run.py
