@@ -90,6 +90,40 @@ async def read_root(redis=Depends(get_redis)):
 
 
 @app.get(
+    "/ownership",
+    summary="Get all the ownership records",
+    tags=["Ownership"],
+)
+async def get_ownwership(redis=Depends(get_redis)):
+    try:
+        keys = redis.keys("ownership/*")
+
+        ownership = {}
+        active_count = 0
+        deleted_count = 0
+        for key in keys:
+            data = redis.hgetall(key)
+            ownership[get_ownership_key(key)] = {
+                k.decode("utf-8"): v.decode("utf-8") for k, v in data.items()
+            }
+            if ownership[get_ownership_key(key)]["deleted"] == "true":
+                deleted_count += 1
+            else:
+                active_count += 1
+
+        return {
+            "status": "fetched ownership records",
+            "total": len(ownership),
+            "active": active_count,
+            "deleted": deleted_count,
+            "ownership": ownership,
+        }
+    except Exception as e:
+        logger.error(f"unable to get ownership: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get(
     "/ownership/{namespace}/{pod_name}",
     summary="Get the ownership of a pod",
     tags=["Ownership"],
@@ -141,28 +175,4 @@ if environment == "dev":
             }
         except Exception as e:
             logger.error(f"unable to set ownership for {namespace}/{pod_name}: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
-
-    @app.get(
-        "/ownership",
-        summary="[development only] Get all the ownership records",
-        tags=["Development Only"],
-    )
-    async def get_ownwership(redis=Depends(get_redis)):
-        try:
-            keys = redis.keys("ownership/*")
-
-            ownership = {}
-            for key in keys:
-                data = redis.hgetall(key)
-                ownership[get_ownership_key(key)] = {
-                    k.decode("utf-8"): v.decode("utf-8") for k, v in data.items()
-                }
-
-            return {
-                "status": "fetched ownership records",
-                "ownership": ownership,
-            }
-        except Exception as e:
-            logger.error(f"unable to get ownership: {e}")
             raise HTTPException(status_code=500, detail=str(e))

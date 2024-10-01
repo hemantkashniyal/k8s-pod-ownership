@@ -7,7 +7,7 @@ data:
   DATABASE_HOST: "redis.k8s-ownership.svc.cluster.local"
   DATABASE_PORT: "6379"
   DATABASE_DB: "0"
-  DELETED_TTL_SEC: "10"
+  DELETED_TTL_SEC: "604800" # 7 days
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -30,9 +30,6 @@ spec:
         envFrom:
           - configMapRef:
               name: k8s-owner-service-config
-        env:
-          - name: FORCE_REDEPLOY_ID
-            value: "1"
         resources:
           limits:
             memory: "512Mi"

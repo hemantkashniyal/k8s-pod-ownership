@@ -1,10 +1,10 @@
-.PHONY: buid-owner-operator
-buid-owner-operator:
-	docker build -f docker/Dockerfile.owner_operator -t hemantkashniyal/k8s-owner-operator:latest .
+.PHONY: buid-owner-job
+buid-owner-job:
+	docker build -f docker/Dockerfile.owner_job -t hemantkashniyal/k8s-owner-job:latest .
 
-.PHONY: push-owner-operator
-push-owner-operator:
-	docker push hemantkashniyal/k8s-owner-operator:latest
+.PHONY: push-owner-job
+push-owner-job:
+	docker push hemantkashniyal/k8s-owner-job:latest
 
 .PHONY: buid-owner-service
 buid-owner-service:
@@ -15,10 +15,10 @@ push-owner-service:
 	docker push hemantkashniyal/k8s-owner-service:latest
 
 .PHONY: docker-build
-docker-build: buid-owner-operator buid-owner-service
+docker-build: buid-owner-job buid-owner-service
 
 .PHONY: docker-push
-docker-push: push-owner-operator push-owner-service
+docker-push: push-owner-job push-owner-service
 
 .PHONY: docker-run
 docker-run:
@@ -27,6 +27,11 @@ docker-run:
 .PHONY: run-owner-service
 run-owner-service: docker-run
 	fastapi dev service/owner-service/run.py --reload
+
+.PHONY: run-owner-job
+run-owner-job: docker-run
+	python3 job/owner-job/run.py
+
 
 .PHONY: run-prod-owner-service
 run-prod-owner-service: docker-run

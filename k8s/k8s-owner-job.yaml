@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+   name: k8s-owner-pod-reader
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8s-owner-pod-reader
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  - apiGroups: ["batch", "extensions"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-owner-pod-reader-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-owner-pod-reader
+subjects:
+  - kind: ServiceAccount
+    name: k8s-owner-pod-reader
+    namespace: k8s-ownership
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-owner-job-config
+data:
+  ENVIRONMENT: "prod"
+  DATABASE_HOST: "redis.k8s-ownership.svc.cluster.local"
+  DATABASE_PORT: "6379"
+  DATABASE_DB: "0"
+  DELETED_TTL_SEC: "604800" # 7 days
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k8s-owner-job-cronjob
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: "Forbid"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: k8s-owner-pod-reader
+          containers:
+            - name: k8s-owner-job
+              image: hemantkashniyal/k8s-owner-job:latest
+              imagePullPolicy: Always
+              envFrom:
+                - configMapRef:
+                    name: k8s-owner-job-config
+          restartPolicy: Never
+---
