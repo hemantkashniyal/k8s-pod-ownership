@@ -7,6 +7,7 @@ import uuid
 import os
 import redis
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import RedirectResponse
 
 load_dotenv()
 
@@ -63,6 +64,11 @@ app = FastAPI(
     version="0.0.1",
     lifespan=lifespan,
 )
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    return RedirectResponse(url="/health")
 
 
 @app.get("/health", summary="Check the health of the service", tags=["Health"])
