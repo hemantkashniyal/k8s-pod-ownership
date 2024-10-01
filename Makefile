@@ -30,4 +30,4 @@ run-owner-service: docker-run
 
 .PHONY: run-prod-owner-service
 run-prod-owner-service: docker-run
-	fastapi run service/owner-service/run.py
+	ENVIRONMENT=prod fastapi run service/owner-service/run.py
