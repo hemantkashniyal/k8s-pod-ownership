@@ -4,7 +4,7 @@ metadata:
   name: k8s-owner-service-config
 data:
   ENVIRONMENT: "prod"
-  DATABASE_HOST: "redis"
+  DATABASE_HOST: "redis.k8s-ownership.svc.cluster.local"
   DATABASE_PORT: "6379"
   DATABASE_DB: "0"
   DELETED_TTL_SEC: "10"

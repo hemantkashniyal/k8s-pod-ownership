@@ -1,7 +1,6 @@
 from typing import Union, Literal
-
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-
 import logging
 import random
 import uuid
@@ -24,7 +23,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("uvicorn")
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Application startup complete. Database connection established.")
+    yield
+    logger.info("Application shutdown complete. Database connection closed.")
 
 
 async def get_redis():
@@ -46,7 +50,22 @@ def get_ownership_key(key: Union[str, bytes]):
     return "/".join(ownership_key.split("/")[1:])
 
 
-@app.get("/")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Application startup complete.")
+    yield
+    logger.info("Application shutdown complete.")
+
+
+app = FastAPI(
+    title="Pod Ownership Service",
+    description="This service identifies the owner of a pod.",
+    version="0.0.1",
+    lifespan=lifespan,
+)
+
+
+@app.get("/health", summary="Check the health of the service", tags=["Health"])
 async def read_root(redis=Depends(get_redis)):
     try:
         pong = redis.ping()
@@ -56,13 +75,25 @@ async def read_root(redis=Depends(get_redis)):
 
     app_status = "ok" if pong is True else "error"
     storage_status = "ok" if pong is True else "error"
+    if storage_status == "error" or app_status == "error":
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "app": app_status,
+                "storage": storage_status,
+            },
+        )
     return {
         "app": app_status,
         "storage": storage_status,
     }
 
 
-@app.get("/ownership/{namespace}/{pod_name}")
+@app.get(
+    "/ownership/{namespace}/{pod_name}",
+    summary="Get the ownership of a pod",
+    tags=["Ownership"],
+)
 async def get_ownwership(namespace: str, pod_name: str, redis=Depends(get_redis)):
     try:
         data = redis.hgetall(get_key(namespace, pod_name))
@@ -82,7 +113,11 @@ async def get_ownwership(namespace: str, pod_name: str, redis=Depends(get_redis)
 
 if environment == "dev":
 
-    @app.post("/ownership/{namespace}/{pod_name}")
+    @app.post(
+        "/ownership/{namespace}/{pod_name}",
+        summary="[development only] Set the ownership of a pod",
+        tags=["Development Only"],
+    )
     async def get_ownwership(namespace: str, pod_name: str, redis=Depends(get_redis)):
         random_id = str(uuid.uuid4())
         data = {
@@ -108,7 +143,11 @@ if environment == "dev":
             logger.error(f"unable to set ownership for {namespace}/{pod_name}: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
-    @app.get("/ownership")
+    @app.get(
+        "/ownership",
+        summary="[development only] Get all the ownership records",
+        tags=["Development Only"],
+    )
     async def get_ownwership(redis=Depends(get_redis)):
         try:
             keys = redis.keys("ownership/*")
