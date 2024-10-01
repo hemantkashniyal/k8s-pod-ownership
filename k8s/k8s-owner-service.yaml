@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-owner-service-config
+data:
+  ENVIRONMENT: "prod"
+  DATABASE_HOST: "redis"
+  DATABASE_PORT: "6379"
+  DATABASE_DB: "0"
+  DELETED_TTL_SEC: "10"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owner-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owner-service
+  template:
+    metadata:
+      labels:
+        app: owner-service
+    spec:
+      containers:
+      - name: app
+        image: hemantkashniyal/k8s-owner-service:latest
+        imagePullPolicy: Always
+        envFrom:
+          - configMapRef:
+              name: k8s-owner-service-config
+        env:
+          - name: FORCE_REDEPLOY_ID
+            value: "1"
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ownership-service
+spec:
+  selector:
+    app: owner-service
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
