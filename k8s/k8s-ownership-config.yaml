@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-ownership-config
+data:
+  ENVIRONMENT: "prod"
+  DATABASE_HOST: "redis.k8s-ownership.svc.cluster.local"
+  DATABASE_PORT: "6379"
+  DATABASE_DB: "0"
+  DELETED_TTL_SEC: "604800" # 7 days
+---

@@ -60,6 +60,6 @@ spec:
               imagePullPolicy: Always
               envFrom:
                 - configMapRef:
-                    name: k8s-owner-job-config
+                    name: k8s-ownership-config
           restartPolicy: Never
 ---
