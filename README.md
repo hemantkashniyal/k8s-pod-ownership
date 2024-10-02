@@ -1,5 +1,9 @@
 # k8s-pod-ownership
-This project is a Kubernetes operator that manages ownership records for pods in a database. It provides an API to get and set ownership records for pods, and a job to update the ownership records periodically.
+This project is a Kubernetes job and a service that manages ownership records for pods in a database.
+
+Ownership of a pod within a namespace is defined as the entity which is responsible for the pod like a Deployment, Job, CronJob, StatefulSet, DaemonSet, etc.
+
+Pod ownership service provides an API to get ownership records for pods, and a job to update the ownership records periodically.
 
 Any deleted pod's (from the k8s cluster) will have its ownership record kept for 7 days, after which it will be deleted.
 
@@ -22,6 +26,8 @@ Sample record looks like this:
 - [Installation](#installation)
 - [API Reference](#api-reference)
 - [Local Development](#local-development)
+- [License](#license)
+
 ## Overview
 
 This project is designed to help manage ownership of Kubernetes pods in a Redis database. It provides an API to get and set ownership records for pods, and a job to update the ownership records periodically.
@@ -113,3 +119,5 @@ Running service and job locally will first spin a Redis database in a container 
     ```
     make docker-build docker-push
     ```
+## License
+This project is licensed under the MIT License. See the LICENSE file for more details.
