@@ -1,18 +1,20 @@
+DOCKER_USERNAME=hemantkashniyal
+
 .PHONY: buid-owner-job
 buid-owner-job:
-	docker build -f docker/Dockerfile.owner_job -t hemantkashniyal/k8s-owner-job:latest .
+	docker build -f docker/Dockerfile.owner_job -t ${DOCKER_USERNAME}/k8s-owner-job:latest .
 
 .PHONY: push-owner-job
 push-owner-job:
-	docker push hemantkashniyal/k8s-owner-job:latest
+	docker push ${DOCKER_USERNAME}/k8s-owner-job:latest
 
 .PHONY: buid-owner-service
 buid-owner-service:
-		docker build -f docker/Dockerfile.owner_service -t hemantkashniyal/k8s-owner-service:latest .
+	docker build -f docker/Dockerfile.owner_service -t ${DOCKER_USERNAME}/k8s-owner-service:latest .
 
 .PHONY: push-owner-service
 push-owner-service:
-	docker push hemantkashniyal/k8s-owner-service:latest
+	docker push ${DOCKER_USERNAME}/k8s-owner-service:latest
 
 .PHONY: docker-build
 docker-build: buid-owner-job buid-owner-service
