@@ -34,7 +34,6 @@ run-owner-service: docker-run
 run-owner-job: docker-run
 	python3 job/owner-job/run.py
 
-
 .PHONY: run-prod-owner-service
 run-prod-owner-service: docker-run
 	ENVIRONMENT=prod fastapi run --workers 4 service/owner-service/run.py
