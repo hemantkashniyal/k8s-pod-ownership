@@ -1,0 +1,51 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  debug:
+    verbosity: detailed
+
+  zipkin:
+    endpoint: "http://zipkin:9411/api/v2/spans"  # Zipkin's endpoint
+
+  prometheus:  # Optional: For exporting metrics to Prometheus
+    endpoint: ":8889"  # Change as needed
+
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  opensearch:
+    logs_index: otel
+    http:
+      endpoint: "http://opensearch:9200"
+      tls:
+        insecure: true
+
+processors:
+  batch:
+
+service:
+  telemetry:
+    logs:
+      level: "debug"
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug, zipkin, otlp/jaeger]
+      processors: [batch]
+    metrics:
+      receivers: [otlp]
+      exporters: [debug, prometheus]
+      processors: [batch]
+    # logs:
+    #   receivers: [otlp]
+    #   exporters: [debug]
+    #   processors: [batch]

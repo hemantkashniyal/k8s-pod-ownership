@@ -2,3 +2,7 @@ fastapi[standard]
 redis
 python-dotenv
 setuptools
+opentelemetry-distro
+opentelemetry-exporter-otlp
+opentelemetry-instrumentation-fastapi
+opentelemetry-exporter-otlp-proto-grpc

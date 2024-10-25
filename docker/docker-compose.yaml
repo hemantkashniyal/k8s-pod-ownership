@@ -5,3 +5,81 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"] # Specify the config file
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml # Mount the config file
+    ports:
+      - "4317:4317" # Expose port 4317 for OTLP gRPC
+      - "4318:4318" # Expose port 4317 for OTLP http
+      - "8889:8889" # Expose port for prometheus scraping
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"  # Expose Zipkin UI on port 9411
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      # - "5775:5775/udp"
+      # - "6831:6831/udp"
+      # - "6832:6832/udp"
+      # - "5778:5778"
+      - "16686:16686"
+      - "14250:14250"
+      - "14268:14268"
+      - "14269:14269"
+      - "4317"
+      - "4318"
+    environment:
+      - COLLECTOR_OLTP_ENABLED=false
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"  # Expose Prometheus UI
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml  # Configuration file
+
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
+      - "DISABLE_SECURITY_PLUGIN=true" # Disables Security plugin
+      - "DISABLE_INSTALL_DEMO_CONFIG=true" # Prevents execution of bundled demo script which installs demo certificates and security configurations to OpenSearch
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+      - 9300:9300
+    command: ["opensearch", "-Elogger.level=${OPENSEARCH_LOG_LEVEL:-INFO}"]
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+
+  opensearch-admin:
+    image: opensearchproject/opensearch-dashboards:latest
+    depends_on:
+      - opensearch
+    ports:
+      - 5601:5601
+      - 9600:9600 # required for Performance Analyzer
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
+
+volumes:
+  opensearch-data:
